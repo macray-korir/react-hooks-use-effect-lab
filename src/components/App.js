@@ -1,41 +1,36 @@
-import React, { useState } from "react";
-import Question from "./Question";
-import quiz from "../data/quiz";
+import React, { useState, useEffect } from "react";
 
-function App() {
-  const [questions, setQuestions] = useState(quiz);
-  const [currentQuestionId, setCurrentQuestion] = useState(1);
-  const [score, setScore] = useState(0);
-  const currentQuestion = questions.find((q) => q.id === currentQuestionId);
+const Question = ({ question, onAnswered }) => {
+  const [timeRemaining, setTimeRemaining] = useState(10);
 
-  function handleQuestionAnswered(correct) {
-    if (currentQuestionId < questions.length) {
-      setCurrentQuestion((currentQuestionId) => currentQuestionId + 1);
-    } else {
-      setCurrentQuestion(null);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setTimeRemaining((prevTime) => prevTime - 1);
+    }, 1000);
+
+    return () => {
+      clearTimeout(timer); // Cleanup function to clear the timeout on unmount
+    };
+  }, [timeRemaining]); // Add timeRemaining as a dependency to trigger useEffect on every update
+
+  useEffect(() => {
+    if (timeRemaining === 0) {
+      setTimeRemaining(10); // Reset timeRemaining when it hits 0
+      onAnswered(false); // Call onAnswered with false after 10 seconds
     }
-    if (correct) {
-      setScore((score) => score + 1);
-    }
-  }
+  }, [timeRemaining, onAnswered]);
 
   return (
-    <main>
-      <section>
-        {currentQuestion ? (
-          <Question
-            question={currentQuestion}
-            onAnswered={handleQuestionAnswered}
-          />
-        ) : (
-          <>
-            <h1>Game Over</h1>
-            <h2>Total Correct: {score}</h2>
-          </>
-        )}
-      </section>
-    </main>
+    <div>
+      <h2>{question.text}</h2>
+      <ul>
+        {question.answers.map((answer, index) => (
+          <li key={index}>{answer}</li>
+        ))}
+      </ul>
+      <p>{timeRemaining} seconds remaining</p>
+    </div>
   );
-}
+};
 
-export default App;
+export default Question;
